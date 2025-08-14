@@ -1,10 +1,14 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:coffee_app/screens/menu.dart';
 import 'package:coffee_app/screens/widgets/banner.dart';
 import 'package:coffee_app/screens/widgets/category_item.dart';
 import 'package:coffee_app/screens/widgets/item.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
+
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -16,6 +20,62 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int selectedCategory = 0;
   List<String> list = ['Cappuccino', 'Machiato', 'Latte', 'Americano'];
+  String _currentLocation = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Check if location service is enabled
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      setState(() {
+        _currentLocation = "Location Disabled";
+      });
+      return;
+    }
+
+    // Request permission
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        setState(() {
+          _currentLocation = "Permission Denied";
+        });
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      setState(() {
+        _currentLocation = "Permission Permanently Denied";
+      });
+      return;
+    }
+
+    // Get current position
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+
+    // Reverse geocoding to get place name
+    List<Placemark> placemarks =
+    await placemarkFromCoordinates(position.latitude, position.longitude);
+
+    if (placemarks.isNotEmpty) {
+      Placemark place = placemarks.first;
+      setState(() {
+        _currentLocation = "${place.locality}, ${place.country}";
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +116,7 @@ class _HomeState extends State<Home> {
                               Row(
                                 children: [
                                   Text(
-                                    "Bilzen, Tanjungbalai",
+                                    _currentLocation,
                                     style: GoogleFonts.sora(
                                       color: const Color(0xffDDDDDD),
                                       fontSize: 14,
@@ -74,11 +134,19 @@ class _HomeState extends State<Home> {
                           SizedBox(
                             width: 44,
                             height: 44,
+                            child: GestureDetector(
+                              onTap: (){
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (content) => const MenuPage() ),
+                                );
+                              },
                             child: Image.asset(
                               "assets/images/avatar.png",
                               fit: BoxFit.fill,
                             ),
-                          )
+                          ),
+                          ),
                         ],
                       ),
                       SizedBox(

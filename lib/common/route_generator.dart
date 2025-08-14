@@ -3,6 +3,7 @@ import 'package:coffee_app/screens/detail.dart';
 import 'package:coffee_app/screens/home.dart';
 import 'package:coffee_app/screens/order.dart';
 import 'package:coffee_app/screens/welcome.dart';
+import 'package:coffee_app/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'app_routes.dart';
 
@@ -32,6 +33,11 @@ class RouteGenerator {
       case Routes.delivery:
         return buildRoute(
           const Delivery(),
+          settings: settings,
+        );
+      case Routes.login:
+        return buildRoute(
+          const LoginPage(),
           settings: settings,
         );
       default:
